@@ -17,8 +17,21 @@ from graia.saya import Saya, Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
 
 
-bakas = [Template('${name}小老弟行不行啊'), Template('这个${name}真的太逊了'), Template('逊馁，${name}'), Template('菜${name}'),
-         Template('菜狗${name}'), Template('咸鱼 ${name} 咸鱼'), Template('嫌弃${name}'), Template('笨蛋${name}')]
+CAI_TEMPLATE_STRINGS = [
+    '${name}是真的不行',
+    '这个${name}真的太逊了',
+    '菜${name}',
+    '${name}好菜',
+    '${name}太菜了',
+    '没用的${name}',
+    '废物${name}',
+    '嫌弃${name}',
+    '笨蛋${name}',
+    '${name}好笨',
+    '${name}太笨了',
+]
+
+bakas = [Template(str) for str in CAI_TEMPLATE_STRINGS]
 
 
 # 插件信息
@@ -47,7 +60,7 @@ async def group_message_listener(
     baka_template = choice(bakas)
     # 30%几率diss到自己
     if random() < 0.3:
-        msg = '还骂别人呢 ' + baka_template.substitute(name=sender.name)
+        msg = '还骂别人呢，' + baka_template.substitute(name=sender.name)
     else:
         msg = baka_template.substitute(name=name)
     await app.send_group_message(group, MessageChain(Plain(msg)))
