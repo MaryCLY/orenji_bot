@@ -1,6 +1,7 @@
 # python
 from random import choice, random
 from string import Template
+from datetime import datetime
 
 # ariadne
 from graia.ariadne.app import Ariadne
@@ -61,6 +62,14 @@ async def group_message_listener(
     # 30%几率diss到自己
     if random() < 0.3:
         msg = '还骂别人呢，' + baka_template.substitute(name=sender.name)
+    elif name.isspace():
+        # 如果未指定目标，则随机diss活跃用户
+        member_list = await app.get_member_list(group)
+        # 过滤7天内发言的用户
+        active_member_list = [
+            member for member in member_list if member["last_speak_timestamp"] >= datetime.now().timestamp() - 7 * 24 * 3600]
+        random_diss_target = choice(active_member_list)
+        msg = baka_template.substitute(name=random_diss_target.name)
     else:
         msg = baka_template.substitute(name=name)
     await app.send_group_message(group, MessageChain(Plain(msg)))
