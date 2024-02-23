@@ -111,8 +111,9 @@ async def add_setu_by_quote_listener(
 @channel.use(ListenerSchema(listening_events=[GroupMessage], inline_dispatchers=[Twilight([ElementMatch(At,optional=True),
                                                                                            FullMatch("一般")])]))
 async def delete_setu_by_quote_listener(
-        app: Ariadne,
-        event: MessageEvent
+    app: Ariadne,
+    group: Group,
+    event: MessageEvent
 ):
     #logger.warning("收到删除，检查是否有quote")
     if not event.quote: return
@@ -122,7 +123,8 @@ async def delete_setu_by_quote_listener(
     #logger.warning("取得删除图片的bytes")
     logger.info("尝试从数据库删除该色图")
     try:
-        await delete_image_bytes_from_backend_db(image_bytes)
+        return_msg = await delete_image_bytes_from_backend_db(image_bytes)
+        if return_msg: await app.send_group_message(group, MessageChain([Plain(return_msg)]))
     except Exception as e:  # if the image is broken(no url and no base64), return
         logger.warning("尝试从数据库删除该色图失败，", e)
 
@@ -158,9 +160,10 @@ async def add_image_bytes_to_backend_db(image_bytes:bytes, force:bool):
         async with session.post(BACKEND_URL + "api/setu/add", data={"setu": image_bytes, "mime": magic.from_buffer(image_bytes).split()[0], "force":str(int(force))}) as response:
             if response.status == 204:
                 logger.info("成功加入数据库")
-                return "好"
+                return "好死" if force else "好"
             elif response.status == 400:
                 logger.info("已经添加过该图片")
+                return "好过了"
             elif response.status == 418:
                 logger.info("后端拒绝该图")
                 #return "一般"
@@ -181,6 +184,7 @@ async def delete_image_bytes_from_backend_db(image_bytes):
                 logger.info("表项已删除，但硬盘上本来就不存在该图")
             elif response.status == 204:
                 logger.info("成功删除")
+                return "确实一般"
             else:
                 logger.info("backend internal error")
             return
